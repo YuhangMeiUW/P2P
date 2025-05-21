@@ -12,8 +12,8 @@ from scipy.optimize import minimize
 # N_list = [20, 50, 100, 200, 400, 800, 2000] ##Number of samples
 N_list = [1000] ##Number of samples
 # T_list = [501, 251, 101, 51, 21, 11]## number of time steps dt = [0.002, 0.004, 0.01, 0.02, 0.05, 0.1]
-T_list = [2501, 1251, 501, 251, 101, 51]## number of time steps dt = [0.002, 0.004, 0.01, 0.02, 0.05, 0.1]
-# T_list = [1251]
+# T_list = [2501, 1251, 501, 251, 101, 51]## number of time steps dt = [0.002, 0.004, 0.01, 0.02, 0.05, 0.1]
+T_list = [1251]
 n = 2 ## dimension of the state space
 m = 1 ## dimension of the control space
 tf = 5.0 ## terminal time
@@ -29,7 +29,7 @@ y = torch.tensor([[0.0],[0.0]])
 # sigma_list = [0.0, 0.02] ##std of the terminal distribution
 sigma_list = [0.0] ##std of the terminal distribution
 
-exp_num = 2 ## number of experiments
+exp_num = 1 ## number of experiments
 
 
 MSE_record = np.zeros((len(T_list), 5, exp_num))
@@ -44,7 +44,8 @@ for i, T in enumerate(T_list):
     dt = t[1] - t[0]
     dt_list[i] = dt
     dt = dt.item()
-    U_d = trajectory_optimization(dt, T, x_0, y)
+    # U_d = trajectory_optimization(dt, T, x_0, y)
+    U_d = torch.zeros(T, m)
     for j, sigma in enumerate(sigma_list):
         for sample_idx, N in enumerate(N_list):
 
@@ -65,20 +66,20 @@ for i, T in enumerate(T_list):
                 #     dX = (A @ X_backward_u[k,:,:].T).T * dt + (B @ (epsilon * W_backward).T).T
                 #     X_backward[k-1,:,:] = X_backward[k,:,:] - dX
                 X_backward = torch.zeros((T, N, n))
-                X_backward_u = torch.zeros((T, N, n))
+                # X_backward_u = torch.zeros((T, N, n))
                 X_backward[-1,:,:] = torch.randn(N,n)*sigma + y.T
-                X_backward_u[-1,:,:] = torch.randn(N,n)*sigma + y.T
+                # X_backward_u[-1,:,:] = torch.randn(N,n)*sigma + y.T
                 for k in range(T-1, 0, -1):
                     df1 = X_backward[k,:,1]
                     df2 = torch.sin(X_backward[k,:,0]) - 0.01 * X_backward[k,:,1]
                     df = torch.stack((df1, df2), dim=1)
                     dX = (df.T).T * dt + (B @ (epsilon * torch.randn(N,1)*np.sqrt(dt)).T).T
                     X_backward[k-1,:,:] = X_backward[k,:,:] - dX
-                    df1_u = X_backward_u[k,:,1]
-                    df2_u = torch.sin(X_backward_u[k,:,0]) - 0.01 * X_backward_u[k,:,1]
-                    df_u = torch.stack((df1_u, df2_u), dim=1)
-                    dX_u = (df_u.T  + B @ U_d[k-1,:].repeat(N,1).T).T * dt + (B @ (epsilon * torch.randn(N,1)*np.sqrt(dt)).T).T
-                    X_backward_u[k-1,:,:] = X_backward_u[k,:,:] - dX_u
+                    # df1_u = X_backward_u[k,:,1]
+                    # df2_u = torch.sin(X_backward_u[k,:,0]) - 0.01 * X_backward_u[k,:,1]
+                    # df_u = torch.stack((df1_u, df2_u), dim=1)
+                    # dX_u = (df_u.T  + B @ U_d[k-1,:].repeat(N,1).T).T * dt + (B @ (epsilon * torch.randn(N,1)*np.sqrt(dt)).T).T
+                    # X_backward_u[k-1,:,:] = X_backward_u[k,:,:] - dX_u
                 
                 ## Calculate mean and covariance of the backward samples without control
                 # Mean_Xb = X_backward.mean(dim=1)
@@ -90,11 +91,11 @@ for i, T in enumerate(T_list):
                 hidden_dim = 32
                 learning_rate = 3e-4
                 batch_size = 32
-                t_batch_size = 12
-                iterations = 24000 
+                t_batch_size = 32
+                iterations = 30000 
 
-                model_u = score_nn(n, m, hidden_dim)
-                train_score_nn(X_backward_u, t, B, learning_rate, iterations, batch_size, t_batch_size, N, model_u)
+                # model_u = score_nn(n, m, hidden_dim)
+                # train_score_nn(X_backward_u, t, B, learning_rate, iterations, batch_size, t_batch_size, N, model_u)
 
                 model = score_nn(n, m, hidden_dim)
                 train_score_nn(X_backward, t, B, learning_rate, iterations, batch_size, t_batch_size, N, model)
@@ -137,14 +138,14 @@ for i, T in enumerate(T_list):
                     
                     
                     # ## NN method with control
-                    model_pred_u = model_u.forward(X_pred_u[k-1,:,:], t[k-1].repeat(N,1))
-                    u2 = U_d[k-1,:].repeat(N,1) + model_pred_u * epsilon**2
-                    u2_record[k-1,:,:] = u2
-                    df1_u = X_pred_u[k-1,:,1]
-                    df2_u = torch.sin(X_pred_u[k-1,:,0]) - 0.01 * X_pred_u[k-1,:,1]
-                    df_u = torch.stack((df1_u, df2_u), dim=1)
-                    dX_u = (df_u.T  + B @ u2.T).T * dt + (B @ (epsilon * W_forward[k-1,:,:]).T).T
-                    X_pred_u[k,:,:] = X_pred_u[k-1,:,:] + dX_u
+                    # model_pred_u = model_u.forward(X_pred_u[k-1,:,:], t[k-1].repeat(N,1))
+                    # u2 = U_d[k-1,:].repeat(N,1) + model_pred_u * epsilon**2
+                    # u2_record[k-1,:,:] = u2
+                    # df1_u = X_pred_u[k-1,:,1]
+                    # df2_u = torch.sin(X_pred_u[k-1,:,0]) - 0.01 * X_pred_u[k-1,:,1]
+                    # df_u = torch.stack((df1_u, df2_u), dim=1)
+                    # dX_u = (df_u.T  + B @ u2.T).T * dt + (B @ (epsilon * W_forward[k-1,:,:]).T).T
+                    # X_pred_u[k,:,:] = X_pred_u[k-1,:,:] + dX_u
 
                     ## Exact solution without control
                     # Q_1t = sigma**2 * torch.eye(n) + epsilon**2  * expt1A[k-1,:,:] @ phi1t[k-1,:,:] @ expt1Atrans[k-1,:,:]
@@ -164,19 +165,19 @@ for i, T in enumerate(T_list):
                     # X_pred_k_approx[k,:,:] = X_pred_k_approx[k-1,:,:] + dX_k_approx
 
                     ## Deterministic open loop control
-                    u5 = U_d[k-1,:].repeat(N,1)
-                    u5_record[k-1,:,:] = u5
-                    df1_det = X_pred_det[k-1,:,1]
-                    df2_det = torch.sin(X_pred_det[k-1,:,0]) - 0.01 * X_pred_det[k-1,:,1]
-                    df_det = torch.stack((df1_det, df2_det), dim=1)
-                    dX_det = (df_det.T  + B @ u5.T).T * dt + (B @ (epsilon * W_forward[k-1,:,:]).T).T
-                    X_pred_det[k,:,:] = X_pred_det[k-1,:,:] + dX_det
+                    # u5 = U_d[k-1,:].repeat(N,1)
+                    # u5_record[k-1,:,:] = u5
+                    # df1_det = X_pred_det[k-1,:,1]
+                    # df2_det = torch.sin(X_pred_det[k-1,:,0]) - 0.01 * X_pred_det[k-1,:,1]
+                    # df_det = torch.stack((df1_det, df2_det), dim=1)
+                    # dX_det = (df_det.T  + B @ u5.T).T * dt + (B @ (epsilon * W_forward[k-1,:,:]).T).T
+                    # X_pred_det[k,:,:] = X_pred_det[k-1,:,:] + dX_det
                     
-                MSE_record[i,0,exp] = ((X_pred[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the NN method without control
-                MSE_record[i,1,exp] = ((X_pred_u[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the NN method with control
-                # MSE_record[i,2,exp] = ((X_pred_sol[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the exact solution without control
-                # MSE_record[i,3,exp] = ((X_pred_sol_u[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the exact solution with control
-                MSE_record[i,4,exp] = ((X_pred_det[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the deterministic open loop control
+                # MSE_record[i,0,exp] = ((X_pred[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the NN method without control
+                # MSE_record[i,1,exp] = ((X_pred_u[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the NN method with control
+                # # MSE_record[i,2,exp] = ((X_pred_sol[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the exact solution without control
+                # # MSE_record[i,3,exp] = ((X_pred_sol_u[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the exact solution with control
+                # MSE_record[i,4,exp] = ((X_pred_det[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the deterministic open loop control
                 # MSE_record[j,sample_idx,0,exp] = ((X_pred[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the NN method without control
                 # MSE_record[j,sample_idx,1,exp] = ((X_pred_u[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the NN method with control
                 # MSE_record[j,sample_idx,2,exp] = ((X_pred_sol[-1,:,:] - y.T)**2).sum(dim=1).mean() ## MSE of the exact solution without control
@@ -198,10 +199,13 @@ for i, T in enumerate(T_list):
 
 
 # torch.save(u_norm_record, f'IP_unorm_sigma_epsilon{epsilon}_N{N}_T{T}exp5.pt')
-torch.save(MSE_record, f'IP_MSE_dt_epsilon{epsilon}_N{N}_sigma{sigma}exp45.pt')
+# torch.save(MSE_record, f'IP_MSE_dt_epsilon{epsilon}_N{N}_sigma{sigma}exp45.pt')
 # torch.save(MSE_det_record, f'MSE_det_record_sigma{sigma}.pt')
 # torch.save(dt_list, 'dt_list.pt')
-# torch.save(X_pred, f'IP_NN_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
+# torch.save(X_pred, f'IP_traj_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
 # torch.save(X_pred_u, f'IP_NNu_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
 # torch.save(X_pred_det, f'IP_Openloop_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
-# torch.save(X_backward_u, f'X_b.pt')
+# torch.save(X_backward, f'IP_Z_traj_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
+# torch.save(u1_record, f'IP_u1_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
+MSE = (X_pred[-1,:,:]**2).sum(dim=1).mean()
+print(MSE)

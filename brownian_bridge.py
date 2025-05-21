@@ -77,7 +77,7 @@ for i, T in enumerate(T_list):
                     W_backward = torch.randn(N,n)*np.sqrt(dt)
                     dX_u = (A @ X_backward_u[k,:,:].T  + B @ U_d[k-1,:].repeat(N,1).T).T * dt + (B @ (epsilon * W_backward).T).T
                     X_backward_u[k-1,:,:] = X_backward_u[k,:,:] - dX_u
-                    dX = (A @ X_backward_u[k,:,:].T).T * dt + (B @ (epsilon * W_backward).T).T
+                    dX = (A @ X_backward[k,:,:].T).T * dt + (B @ (epsilon * W_backward).T).T
                     X_backward[k-1,:,:] = X_backward[k,:,:] - dX
                 
                 ## Calculate mean and covariance of the backward samples without control
@@ -184,6 +184,8 @@ for i, T in enumerate(T_list):
 # torch.save(MSE_record, f'MSE_dt_epsilon{epsilon}_N{N}_sigma{sigma}.pt')
 # torch.save(MSE_det_record, f'MSE_det_record_sigma{sigma}.pt')
 # torch.save(dt_list, 'dt_list.pt')
-torch.save(X_pred_u, f'NNu_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
-torch.save(X_pred_det, f'Openloop_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
+torch.save(X_pred_u, f'NNu_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}4fig1.pt')
+# torch.save(X_pred_det, f'Openloop_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
+torch.save(X_backward_u, f'X_backward_u_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}4fig1.pt')
+torch.save(u2_record, f'U_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}4fig1.pt')
 
