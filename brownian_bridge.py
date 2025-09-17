@@ -180,12 +180,12 @@ for i, T in enumerate(T_list):
                 print('rest time: ', rest_time, 'minutes')
 
 
-# torch.save(u_norm_record, f'unorm_sigma_epsilon{epsilon}_N{N}_dt{dt}.pt')
-# torch.save(MSE_record, f'MSE_dt_epsilon{epsilon}_N{N}_sigma{sigma}.pt')
-# torch.save(MSE_det_record, f'MSE_det_record_sigma{sigma}.pt')
-# torch.save(dt_list, 'dt_list.pt')
-torch.save(X_pred_u, f'NNu_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}4fig1.pt')
-# torch.save(X_pred_det, f'Openloop_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
-torch.save(X_backward_u, f'X_backward_u_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}4fig1.pt')
-torch.save(u2_record, f'U_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}4fig1.pt')
+# torch.save(u_norm_record, f'data/unorm_sigma_epsilon{epsilon}_N{N}_dt{dt}.pt')
+# torch.save(MSE_record, f'data/MSE_dt_epsilon{epsilon}_N{N}_sigma{sigma}.pt')
+# torch.save(MSE_det_record, f'data/MSE_det_record_sigma{sigma}.pt')
+# torch.save(dt_list, f'data/dt_list.pt')
+torch.save(X_pred_u, f'data/NNu_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}4fig1.pt')
+# torch.save(X_pred_det, f'data/Openloop_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
+torch.save(X_backward_u, f'data/X_backward_u_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}4fig1.pt')
+torch.save(u2_record, f'data/U_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}4fig1.pt')
 
