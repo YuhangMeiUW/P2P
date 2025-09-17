@@ -55,16 +55,6 @@ for i, T in enumerate(T_list):
                 
             
                 ### Generate backward samples 
-                # X_backward_u = torch.zeros((T, N, n))
-                # X_backward_u[-1,:,:] = torch.randn(N,n)*sigma + y.T
-                # X_backward = torch.zeros((T, N, n))
-                # X_backward[-1,:,:] = torch.randn(N,n)*sigma + y.T
-                # for k in range(T-1, 0, -1):
-                #     W_backward = torch.randn(N,n)*np.sqrt(dt)
-                #     dX_u = (A @ X_backward_u[k,:,:].T  + B @ U_d[k-1,:].repeat(N,1).T).T * dt + (B @ (epsilon * W_backward).T).T
-                #     X_backward_u[k-1,:,:] = X_backward_u[k,:,:] - dX_u
-                #     dX = (A @ X_backward_u[k,:,:].T).T * dt + (B @ (epsilon * W_backward).T).T
-                #     X_backward[k-1,:,:] = X_backward[k,:,:] - dX
                 X_backward = torch.zeros((T, N, n))
                 # X_backward_u = torch.zeros((T, N, n))
                 X_backward[-1,:,:] = torch.randn(N,n)*sigma + y.T
@@ -147,23 +137,7 @@ for i, T in enumerate(T_list):
                     # dX_u = (df_u.T  + B @ u2.T).T * dt + (B @ (epsilon * W_forward[k-1,:,:]).T).T
                     # X_pred_u[k,:,:] = X_pred_u[k-1,:,:] + dX_u
 
-                    ## Exact solution without control
-                    # Q_1t = sigma**2 * torch.eye(n) + epsilon**2  * expt1A[k-1,:,:] @ phi1t[k-1,:,:] @ expt1Atrans[k-1,:,:]
-                    # u3 = -epsilon**2 * (X_pred_sol[k-1,:,:] - (expt1A[k-1,:,:] @ y).repeat(1,N).T) @ (B.T @ torch.linalg.pinv(Q_1t)).T
-                    # u3_record[k-1,:,:] = u3
-                    # dX_sol = (A @ X_pred_sol[k-1,:,:].T + B @ u3.T).T * dt + (B @(epsilon * W_forward[k-1,:,:]).T).T
-                    # X_pred_sol[k,:,:] = X_pred_sol[k-1,:,:] + dX_sol
                     
-                    ## Exact solution with control
-                    # u4 = U_d[k-1,:].repeat(N,1) - epsilon**2 *(X_pred_sol_u[k-1,:,:] - (t[k-1])* y.T)/(epsilon**2 * (1-t[k-1]) + sigma**2)
-                    # u4_record[k-1,:,:] = u4
-                    # dX_sol_u = (A @ X_pred_sol_u[k-1,:,:].T + B @ u4.T).T * dt + (B @(epsilon * W_forward[k-1,:,:]).T).T
-                    # X_pred_sol_u[k,:,:] = X_pred_sol_u[k-1,:,:] + dX_sol_u 
-                    ## Approximation k method (without control)
-                    # u4 = (-(epsilon**2) * B.T @ torch.linalg.pinv(Cov_Xb[k-1,:]) @ (X_pred_k_approx[k-1,:,:] - Mean_Xb[k-1,:].repeat(N,1)).T).T 
-                    # dX_k_approx = (A @ X_pred_k_approx[k-1,:,:].T + B @ u4.T).T * dt + (B @(epsilon * W_forward[k-1,:,:]).T).T
-                    # X_pred_k_approx[k,:,:] = X_pred_k_approx[k-1,:,:] + dX_k_approx
-
                     ## Deterministic open loop control
                     # u5 = U_d[k-1,:].repeat(N,1)
                     # u5_record[k-1,:,:] = u5
@@ -198,14 +172,8 @@ for i, T in enumerate(T_list):
                 print('rest time: ', rest_time, 'minutes')
 
 
-# torch.save(u_norm_record, f'IP_unorm_sigma_epsilon{epsilon}_N{N}_T{T}exp5.pt')
-# torch.save(MSE_record, f'IP_MSE_dt_epsilon{epsilon}_N{N}_sigma{sigma}exp45.pt')
-# torch.save(MSE_det_record, f'MSE_det_record_sigma{sigma}.pt')
-# torch.save(dt_list, 'dt_list.pt')
-# torch.save(X_pred, f'IP_traj_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
-# torch.save(X_pred_u, f'IP_NNu_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
-# torch.save(X_pred_det, f'IP_Openloop_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
-# torch.save(X_backward, f'IP_Z_traj_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
-# torch.save(u1_record, f'IP_u1_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
-MSE = (X_pred[-1,:,:]**2).sum(dim=1).mean()
-print(MSE)
+torch.save(X_pred, f'data/IP_traj_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
+# torch.save(X_pred_u, f'data/IP_NNu_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
+# torch.save(X_pred_det, f'data/IP_Openloop_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
+torch.save(X_backward, f'data/IP_Z_traj_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
+torch.save(u1_record, f'data/IP_u1_sigma{sigma}_epsilon{epsilon}_N{N}_T{T}.pt')
