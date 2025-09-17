@@ -1,1 +1,1 @@
-# P2P
+# A Time-Reversal Control Synthesis for Steering the State of Stochastic Systems
